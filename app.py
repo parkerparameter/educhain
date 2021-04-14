@@ -21,20 +21,26 @@ blockchain = BlockChain()
 
 @app.route('/mine', methods=['GET'])
 def mine():
+    """
+    interface for forging new blocks into the chain
+    :return: jsonified response
+    """
 
-    last_block = blockchain.last_block
-    last_proof = last_block['proof']
+    last_block = blockchain.last_block                  # need this previous hash to store on the upcoming block
+    last_proof = last_block['proof']                    # where the last pow alg halted
 
-    proof = blockchain.simple_pow(last_proof=last_proof)
+    proof = blockchain.simple_pow(last_proof=last_proof)    # generate pow for current block
 
+    # add the mining transaction
     blockchain.add_new_transaction(
         sender="0",
         recipient=node_id,
         payload={},
         amount=1
     )
-    phash = blockchain.hash(last_block)
-    block = blockchain.add_new_block(previous_hash=phash, proof=proof)
+
+    phash = blockchain.hash(last_block)             # previous has we were just chatting about
+    block = blockchain.add_new_block(previous_hash=phash, proof=proof)      # finally get to add the block to the chain
 
     resp = block.serialize()
 
@@ -45,7 +51,7 @@ def new_transaction():
 
     #unpack post
 
-    values = request.get_json()
+    values = request.get_json(force=True)
 
     if not all([k in values for k in STANDARD_TRANS_KEYS]):
 
@@ -66,7 +72,7 @@ def new_transaction():
 def full_chain():
 
     resp = {
-        'chain': blockchain.chain,
+        'chain': [block.serialize() for block in blockchain],
         'chain_length': len(blockchain)
     }
 

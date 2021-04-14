@@ -7,8 +7,17 @@ from hashlib import sha256
 
 
 class BlockChain(object):
+    """
+    we are what we pretend to be, so we must be careful what we pretend to be
+    """
 
     def __init__(self) -> None:
+        """
+        initialize the block chain. set the block list to empty as well as transactions for the current block
+
+        we must also seed a genesis block, so that the blockchain will function properly on the first POST
+        request to transactions/new
+        """
         self.chain: List[Block] = []
         self.transactions: List[object] = []
 
@@ -20,12 +29,18 @@ class BlockChain(object):
 
         return len(self.chain)
 
+    def __iter__(self):
+
+        yield from self.chain
+
     def add_new_block(self, previous_hash: Union[str, int], proof: int) -> Block:
         """
+        forges a new block in the chain
 
-        :param previous_hash:
-        :param proof:
-        :return:
+        :param previous_hash: previous hash of the block. required for pow for the new block
+                              also safeguards against altering of previously mined blocks
+        :param proof: integer proof used to decrypt the block
+        :return: Block object
         """
         valuables = {
             'index': len(self.chain) + 1,
@@ -48,19 +63,19 @@ class BlockChain(object):
 
     def add_new_transaction(self, sender: str, recipient: str, payload: object, amount: int = 0) -> int:
         """
-
-        :param amount:
-        :param sender:
-        :param recipient:
-        :param payload:
-        :return:
+        appends a transaction to the current block to be mined
+        :param amount: int amount of coin to be sent to in the transaction
+        :param sender: network address of node sending blocks
+        :param recipient: network address of data recipient
+        :param payload: payload of data to be sent
+        :return: int index of block the transaction will be appending to
         """
 
         self.transactions.append(
             {
                 'sender': sender,
                 'recipient': recipient,
-                'data': payload,
+                'payload': payload,
                 'amount': amount
             }
         )
@@ -68,6 +83,11 @@ class BlockChain(object):
         return self.last_block['index'] + 1
 
     def simple_pow(self, last_proof: int) -> int:
+        """
+        simple guess and check method for generating pow
+        :param last_proof: integer last proof guess
+        :return: int of sucessful proof
+        """
         this_proof = 0
         while not self.validate_proof(last_proof=last_proof, this_proof=this_proof):
 
@@ -76,6 +96,12 @@ class BlockChain(object):
 
     @staticmethod
     def validate_proof(last_proof: int, this_proof: int) -> bool:
+        """
+        validates a proof against sha256 encryption
+        :param last_proof: int of last proof
+        :param this_proof: int of current proof
+        :return: bool, True if sufficiently decrypted False else
+        """
 
         return sha256(f'{last_proof *  this_proof}'.encode()).hexdigest()[:4] == "0000"
 
@@ -83,10 +109,13 @@ class BlockChain(object):
     @staticmethod
     def hash(block: Block) -> str:
         """
-
-        :param block:
-        :return:
+        hashes a block
+        :param block: Block object to be hashed
+        :return: str hash of current block
         """
+
+        # have to write serialize method here so that we can jsonify custom Block object
+
         block_string = json.dumps(block.serialize(), sort_keys=True).encode()
 
         return sha256(block_string).hexdigest()
@@ -94,8 +123,8 @@ class BlockChain(object):
     @property
     def last_block(self) -> Block:
         """
-
-        :return:
+        fetch the last block of the chain, if there is atleast one block, if not raise DeficientChainError
+        :return: Block last Block in chain
         """
         if not self.chain:
             raise DeficientChainError()

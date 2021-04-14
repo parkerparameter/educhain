@@ -2,8 +2,15 @@ from static.constants import STANDARD_KEYS
 from static.errors import WrongKeysError
 
 class Block(object):
+    """
+    There are plenty of good reasons for fighting,' I said, 'but no good reason ever to hate without reservation,
+    to imagine that God Almighty Himself hates with you, too. Where's evil? It's that large part of every man that wants
+    to hate without limit, that wants to hate with God on its side. It's that part of every man that finds all kinds of
+    ugliness so attractive
+    """
 
     def __init__(self, valuables: dict):
+
         if set(valuables.keys()) - STANDARD_KEYS:
             raise WrongKeysError(keys=set(vars(valuables)))
 
@@ -25,5 +32,5 @@ class Block(object):
 
     @property
     def keys(self):
-        return set(vars(self.valuables))
+        return set(self.valuables.keys())
 

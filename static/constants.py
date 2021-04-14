@@ -8,7 +8,7 @@ STANDARD_KEYS: set = {
 
 STANDARD_TRANS_KEYS: set = {
     'sender',
-    'receiver',
+    'recipient',
     'payload',
     'amount'
 }
