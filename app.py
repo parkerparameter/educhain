@@ -1,13 +1,9 @@
-import hashlib
-import json
-from textwrap import dedent
-from time import time
-from static.constants import STANDARD_TRANS_KEYS
 from uuid import uuid4
 
-from static.chain import BlockChain
-
 from flask import Flask, jsonify, request
+
+from static.chain import BlockChain
+from static.constants import STANDARD_TRANS_KEYS
 
 # rev the Node
 app = Flask(__name__)
@@ -26,10 +22,10 @@ def mine():
     :return: jsonified response
     """
 
-    last_block = blockchain.last_block                  # need this previous hash to store on the upcoming block
-    last_proof = last_block['proof']                    # where the last pow alg halted
+    last_block = blockchain.last_block  # need this previous hash to store on the upcoming block
+    last_proof = last_block['proof']  # where the last pow alg halted
 
-    proof = blockchain.simple_pow(last_proof=last_proof)    # generate pow for current block
+    proof = blockchain.simple_pow(last_proof=last_proof)  # generate pow for current block
 
     # add the mining transaction
     blockchain.add_new_transaction(
@@ -39,22 +35,21 @@ def mine():
         amount=1
     )
 
-    phash = blockchain.hash(last_block)             # previous has we were just chatting about
-    block = blockchain.add_new_block(previous_hash=phash, proof=proof)      # finally get to add the block to the chain
+    phash = blockchain.hash(last_block)  # previous hash we were just chatting about
+    block = blockchain.add_new_block(previous_hash=phash, proof=proof)  # finally get to add the block to the chain
 
     resp = block.serialize()
 
     return jsonify(resp), 200
 
+
 @app.route('/transactions/new', methods=['POST'])
 def new_transaction():
-
-    #unpack post
+    # unpack post
 
     values = request.get_json(force=True)
 
     if not all([k in values for k in STANDARD_TRANS_KEYS]):
-
         return f'insufficient keys supplied. Given: {values.keys()}\n Required: {STANDARD_TRANS_KEYS}', 400
 
     # create the transaction
@@ -68,9 +63,9 @@ def new_transaction():
 
     return jsonify(resp), 201
 
+
 @app.route('/chain', methods=['GET'])
 def full_chain():
-
     resp = {
         'chain': [block.serialize() for block in blockchain],
         'chain_length': len(blockchain)
